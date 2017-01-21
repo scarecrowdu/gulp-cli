@@ -131,7 +131,7 @@ gulp.task('cssmin', function() {
 });
 
 /* js 压缩 */
-gulp.task('jsmin', [], function() {
+gulp.task('jsmin', function() {
     // js
     var jsmin = gulp.src([devPath.js])
         .pipe(plumber())
@@ -160,7 +160,7 @@ gulp.task('jsmin', [], function() {
 gulp.task('webpack', function() {
     webpackConfig.refreshEntry();
     return gulp.src([devPath.js])
-        .pipe($.webpack(webpackConfig))
+        .pipe(webpack(webpackConfig))
         .pipe(gulp.dest(buildPath.js));
 });
 
@@ -254,19 +254,25 @@ gulp.task('server', ['clean'], function() {
         var proxyOptions = url.parse(proxyUrl.ip + proxyUrl.route);
         proxyOptions.route = proxyUrl.route;
 
-        browserSync({
-            open: true,
-            port: 3000,
+        browserSync.init({ //初始化 BrowserSync
+            injectChanges:true, //插入更改
+            files: ["*.html", "*.css", "*.js"], //监听文件类型来自动刷新
             server: {
-                baseDir: Root.build,
-                middleware: [proxy(proxyOptions)]
+                baseDir: Root.build,  //目录位置
+                middleware: [proxy(proxyOptions)]  //代理设置
             },
-            startPath: "/index.html" //设置默认启动页
-            // files: files
+            ghostMode: {  //是否开启多端同步 
+                click: true,  //同步点击
+                scroll: true //同步滚动
+            },
+            logPrefix: "browserSync in gulp", //再控制台打印前缀
+            browser: ["chrome"], //运行后自动打开的；浏览器 （不填默认则是系统设置的默认浏览器）
+            port: 8080 //使用端口
         });
 
         // 监听watch
         gulp.start('watch');
+        // gulp.watch(['*.html', '*.css', '*.js'], {cwd: 'canvas'}, reload); //gulp监听的文件更改
 
     })
 
