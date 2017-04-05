@@ -1,25 +1,27 @@
-var gulp         =  require('gulp');
-var sass         =  require('gulp-sass');           //sass的编译
-var autoprefixer =  require('gulp-autoprefixer');   //自动添加css前缀
-var minifycss    =  require('gulp-minify-css');     //压缩css一行
-var uglify       =  require('gulp-uglify');         //压缩js代码
-var notify       =  require('gulp-notify');         //加控制台文字描述用的
-var clean        =  require('gulp-clean');          //清理文件
-var fileinclude  =  require('gulp-file-include');   //include 文件用
-var imagemin     =  require('gulp-imagemin');       //图片压缩
-var pngquant     =  require('imagemin-pngquant');   //图片无损压缩
-var cache        =  require('gulp-cache');          //检测文件是否更改
-var zip          =  require('gulp-zip');            //自动打包并按时间重命名
-var htmlmin      =  require('gulp-htmlmin');        //压缩html
-var mergeStream  =  require('merge-stream');        //合并多个 stream
-var gutil        =  require('gulp-util');           //打印日志 log
-var plumber      =  require('gulp-plumber');        //监控错误
-var babel        =  require('gulp-babel');          //编译ES6
-var gulpif       =  require('gulp-if');             //条件判断
-var minimist     =  require('minimist');
-var gulpSequence =  require('gulp-sequence');       //顺序执行
+var gulp = require('gulp');
+var sass = require('gulp-sass'); //sass的编译
+var autoprefixer = require('gulp-autoprefixer'); //自动添加css前缀
+var minifycss = require('gulp-minify-css'); //压缩css一行
+var uglify = require('gulp-uglify'); //压缩js代码
+var notify = require('gulp-notify'); //加控制台文字描述用的
+var clean = require('gulp-clean'); //清理文件
+var fileinclude = require('gulp-file-include'); //include 文件用
+var imagemin = require('gulp-imagemin'); //图片压缩
+var pngquant = require('imagemin-pngquant'); //图片无损压缩
+var cache = require('gulp-cache'); //检测文件是否更改
+var zip = require('gulp-zip'); //自动打包并按时间重命名
+var htmlmin = require('gulp-htmlmin'); //压缩html
+var mergeStream = require('merge-stream'); //合并多个 stream
+var gutil = require('gulp-util'); //打印日志 log
+var plumber = require('gulp-plumber'); //监控错误
+var babel = require('gulp-babel'); //编译ES6
+var gulpif = require('gulp-if'); //条件判断
+var minimist = require('minimist');
+var gulpSequence = require('gulp-sequence'); //顺序执行
 
-var webpack      = require('gulp-webpack');
+var eslint = require('gulp-eslint'); //代码风格检测工具
+
+var webpack = require('gulp-webpack');
 var webpackConfig = require('./webpack.config.js');
 
 var url = require('url');
@@ -40,13 +42,14 @@ var proxyUrl = {
     ip: "http://192.168.1.250",
     route: "/mBet"
 }
+
 // 项目目录
 var Root = {
     dev: "src",
     build: "build",
     zip: "zip"
 }
-    // 未编译的路径
+// 未编译的路径
 var devPath = {
     html: Root.dev + "/**/*.html",
     css: Root.dev + "/assets/css/*.scss",
@@ -54,9 +57,9 @@ var devPath = {
     js: Root.dev + "/assets/js/**/*.js",
     lib: Root.dev + "/assets/lib/**/*",
     image: Root.dev + "/assets/images/**/*.{png,jpg,gif,ico}",
-    tpl: Root.dev + "/**/*.tpl",
+    tpl: Root.dev + "/**/*.tpl"
 }
-    // 编译的路径
+// 编译的路径
 var buildPath = {
     html: Root.build + "",
     css: Root.build + "/assets/css/",
@@ -71,9 +74,8 @@ function watchFile(event) {
     console.log('File ' + event.path + ' was ' + event.type + ', running tasks...');
 };
 
-
 /* html 打包*/
-gulp.task('htmlmin', function() {
+gulp.task('htmlmin', function () {
     var optionsSet = {
         removeComments: true, //清除HTML注释
         collapseWhitespace: true, //压缩HTML
@@ -85,23 +87,17 @@ gulp.task('htmlmin', function() {
         minifyCSS: true //压缩页面CSS
     };
 
-    gulp.src(devPath.html, {
-            base: Root.dev
-        })
+    gulp
+        .src(devPath.html, {base: Root.dev})
         .pipe(plumber())
-        .pipe(fileinclude({
-            prefix: '@@',
-            basepath: '@file'
-        }))
+        .pipe(fileinclude({prefix: '@@', basepath: '@file'}))
         .pipe(gulpif(options.env === 'production', htmlmin(optionsSet)))
         .pipe(gulp.dest(buildPath.html))
-        .pipe(reload({
-            stream: true
-        }))
+        .pipe(reload({stream: true}))
 });
 
 /* css 压缩 */
-gulp.task('cssmin', function() {
+gulp.task('cssmin', function () {
     var AUTOPREFIXER_BROWSERS = [
         'last 6 version',
         'ie >= 6',
@@ -115,8 +111,9 @@ gulp.task('cssmin', function() {
         'bb >= 10'
     ];
 
-    return gulp.src(devPath.css)
-        .pipe(plumber(function(error) {
+    return gulp
+        .src(devPath.css)
+        .pipe(plumber(function (error) {
             gutil.log(error)
             gutil.log(gutil.colors.red('Error (' + error.plugin + '): ' + error.message))
             this.emit('end')
@@ -125,75 +122,71 @@ gulp.task('cssmin', function() {
         .pipe(autoprefixer(AUTOPREFIXER_BROWSERS))
         .pipe(gulpif(options.env === 'production', minifycss()))
         .pipe(gulp.dest(buildPath.css))
-        .pipe(reload({
-            stream: true
-        }))
+        .pipe(reload({stream: true}))
 });
 
 /* js 压缩 */
-gulp.task('jsmin', function() {
+gulp.task('jsmin', function () {
     // js
-    var jsmin = gulp.src([devPath.js])
+    var jsmin = gulp
+        .src([devPath.js,'!node_modules/**'])
         .pipe(plumber())
-        .pipe(babel({
-            presets: ['es2015'],
-        }))
+        .pipe(eslint())
+        .pipe(eslint.format())
+        .pipe(eslint.failAfterError())
+        .pipe(babel({presets: ['es2015']}))
         // .pipe(webpack( webpackConfig ))
         .pipe(gulpif(options.env === 'production', uglify())) // 仅在生产环境时候进行压缩
         .pipe(gulp.dest(buildPath.js))
-        .pipe(reload({
-            stream: true
-        }))
+        .pipe(reload({stream: true}))
 
     // lib 插件
-    var libmin = gulp.src(devPath.lib)
+    var libmin = gulp
+        .src(devPath.lib)
         .pipe(plumber())
         .pipe(gulp.dest(buildPath.lib))
-        .pipe(reload({
-            stream: true
-        }))
+        .pipe(reload({stream: true}))
 
     return mergeStream(jsmin, libmin);
 })
 
 /* webpack */
-gulp.task('webpack', function() {
+gulp.task('webpack', function () {
     webpackConfig.refreshEntry();
-    return gulp.src([devPath.js])
+    return gulp
+        .src([devPath.js])
         .pipe(webpack(webpackConfig))
         .pipe(gulp.dest(buildPath.js));
 });
 
 /* images 压缩 */
 gulp.task('images', () => {
-    gulp.src(devPath.image)
+    gulp
+        .src(devPath.image)
         .pipe(plumber())
         .pipe(cache(imagemin({
             progressive: true,
-            svgoPlugins: [{
-                removeViewBox: false
-            }],
+            svgoPlugins: [
+                {
+                    removeViewBox: false
+                }
+            ],
             use: [pngquant()]
         })))
         .pipe(gulp.dest(buildPath.image))
-        .pipe(reload({
-            stream: true
-        }))
+        .pipe(reload({stream: true}))
 })
 
 /* clean 清除*/
-gulp.task('clean', function() {
-    return gulp.src(Root.build, {
-            read: false
-        })
+gulp.task('clean', function () {
+    return gulp
+        .src(Root.build, {read: false})
         .pipe(clean())
-        .pipe(notify({
-            message: 'Clean task complete'
-        }));
+        .pipe(notify({message: 'Clean task complete'}));
 });
 
 /* 打包压缩包 */
-gulp.task('zip', function() {
+gulp.task('zip', function () {
     function checkTime(i) {
         if (i < 10) {
             i = "0" + i
@@ -210,41 +203,56 @@ gulp.task('zip', function() {
 
     var time = String(year) + String(month) + String(day) + String(hour) + String(minute);
     var build = "build-" + time + ".zip";
-    return gulp.src(buildPath.zip)
+    return gulp
+        .src(buildPath.zip)
         .pipe(plumber())
         .pipe(zip(build))
         .pipe(gulp.dest(Root.zip))
-        .pipe(notify({
-            message: 'Zip task complete'
-        }));
+        .pipe(notify({message: 'Zip task complete'}));
 });
 
 /* watch文件 */
-gulp.task('watch', function() {
-
-    gulp.watch(devPath.tpl, ['htmlmin']).on('change', function(event) {
-        watchFile(event);
-    });
-    gulp.watch(devPath.html, ['htmlmin']).on('change', function(event) {
-        watchFile(event);
-    });
-    gulp.watch(devPath.scss, ['cssmin']).on('change', function(event) {
-        watchFile(event);
-    });
-    gulp.watch(devPath.js, ['jsmin']).on('change', function(event) {
-        watchFile(event);
-    });
-    gulp.watch(devPath.image, ['images']).on('change', function(event) {
-        watchFile(event);
-    });
+gulp.task('watch', function () {
+    // 看守所有.tpl文件
+    gulp
+        .watch(devPath.tpl, ['htmlmin'])
+        .on('change', function (event) {
+            watchFile(event);
+        });
+    // 看守所有.html文件
+    gulp
+        .watch(devPath.html, ['htmlmin'])
+        .on('change', function (event) {
+            watchFile(event);
+        });
+    // 看守所有.scss文件
+    gulp
+        .watch(devPath.scss, ['cssmin'])
+        .on('change', function (event) {
+            watchFile(event);
+        });
+    // 看守所有.js文件
+    gulp
+        .watch(devPath.js, ['jsmin'])
+        .on('change', function (event) {
+            watchFile(event);
+        });
+    // 看守所有图片文件
+    gulp
+        .watch(devPath.image, ['images'])
+        .on('change', function (event) {
+            watchFile(event);
+        });
 
     gutil.log(gutil.colors.green('message：watch任务-监测改动的文件'));
 });
 
 /** 静态服务器 */
-gulp.task('server', ['clean'], function() {
+gulp.task('server', ['clean'], function () {
 
-    gulpSequence(['cssmin', 'images', 'htmlmin', 'jsmin'], function() {
+    gulpSequence([
+        'cssmin', 'images', 'htmlmin', 'jsmin'
+    ], function () {
 
         gutil.log(gutil.colors.green('启动本地服务器'));
         gutil.log(gutil.colors.green('代理请求地址：' + proxyUrl.ip));
@@ -255,41 +263,46 @@ gulp.task('server', ['clean'], function() {
         proxyOptions.route = proxyUrl.route;
 
         browserSync.init({ //初始化 BrowserSync
-            injectChanges:true, //插入更改
-            files: ["*.html", "*.css", "*.js"], //监听文件类型来自动刷新
+            injectChanges: true, //插入更改
+            files: [
+                "*.html", "*.css", "*.js"
+            ], //监听文件类型来自动刷新
             server: {
-                baseDir: Root.build,  //目录位置
-                middleware: [proxy(proxyOptions)]  //代理设置
+                baseDir: Root.build, //目录位置
+                middleware: [proxy(proxyOptions)] //代理设置
             },
-            ghostMode: {  //是否开启多端同步 
-                click: true,  //同步点击
+            ghostMode: { //是否开启多端同步
+                click: true, //同步点击
                 scroll: true //同步滚动
             },
             logPrefix: "browserSync in gulp", //再控制台打印前缀
-            browser: ["chrome"], //运行后自动打开的；浏览器 （不填默认则是系统设置的默认浏览器）
+            // browser: ["chrome"], //运行后自动打开的；浏览器 （不填默认则是系统设置的默认浏览器）
+            open: true, //       自动打开浏览器
             port: 8080 //使用端口
         });
 
         // 监听watch
         gulp.start('watch');
-        // gulp.watch(['*.html', '*.css', '*.js'], {cwd: 'canvas'}, reload); //gulp监听的文件更改
+        // gulp.watch(['src/**']).on('change', function(file) {
+        //     console.log(file)
+        // });
 
     })
 
 });
 
-
 /* 打包 输入命令：npm run build 或者 gulp build --env production */
-gulp.task('build', ['clean'], function() {
-    gulpSequence(['cssmin', 'images', 'htmlmin', 'jsmin'], function() {
+gulp.task('build', ['clean'], function () {
+    gulpSequence([
+        'cssmin', 'images', 'htmlmin', 'jsmin'
+    ], function () {
         gulp.start('zip');
         gutil.log(gutil.colors.green('message：项目已经打包完成'))
     })
 });
 
-
 /* 任务命令 */
-gulp.task('default', function() {
+gulp.task('default', function () {
     gutil.log(gutil.colors.green('开发环境：         npm run dev 或者 gulp server'))
     gutil.log(gutil.colors.green('打包项目：         npm run build 或者 gulp build --env production'))
     gutil.log(gutil.colors.green('删除上线文件夹：    gulp clean'))
