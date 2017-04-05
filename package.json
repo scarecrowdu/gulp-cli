@@ -30,6 +30,7 @@
     "gulp-babel": "^6.1.2",
     "gulp-cache": "^0.4.5",
     "gulp-clean": "^0.3.2",
+    "gulp-eslint": "^3.0.1",
     "gulp-file-include": "^1.0.0",
     "gulp-htmlmin": "^3.0.0",
     "gulp-if": "^2.0.2",
@@ -50,5 +51,12 @@
     "proxy-middleware": "^0.15.0",
     "url": "^0.11.0",
     "webpack": "^1.13.3"
+  },
+  "eslintConfig": {
+    "env": {
+      "es6": true,
+      "browser": true,
+      "node": true
+    }
   }
 }
