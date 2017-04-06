@@ -74,6 +74,20 @@ function watchFile(event) {
     console.log('File ' + event.path + ' was ' + event.type + ', running tasks...');
 };
 
+var ci = false;
+function onError(err) {
+  if (ci) {
+    // stop in CI
+    process.exit(1);
+  } else {
+    // keep going in non-CI
+    gutil.log(err);
+    gutil.beep();
+    this.emit('end');
+  }
+}
+
+
 /* html 打包*/
 gulp.task('htmlmin', function () {
     var optionsSet = {
@@ -88,7 +102,7 @@ gulp.task('htmlmin', function () {
     };
 
     gulp
-        .src(devPath.html, {base: Root.dev})
+        .src([devPath.html, '!*.tpl'], {base: Root.dev})
         .pipe(plumber())
         .pipe(fileinclude({prefix: '@@', basepath: '@file'}))
         .pipe(gulpif(options.env === 'production', htmlmin(optionsSet)))
@@ -127,27 +141,89 @@ gulp.task('cssmin', function () {
 
 /* js 压缩 */
 gulp.task('jsmin', function () {
+    // elinst
+    var lint = gulp
+        .src([devPath.js,'!node_modules/**'])
+        .pipe(plumber())
+        .pipe(eslint({configFle:'./.eslintrc'}))
+        .pipe(eslint.format())
+        .pipe(eslint.failAfterError())
+        .on("error", onError);
+
     // js
     var jsmin = gulp
         .src([devPath.js,'!node_modules/**'])
         .pipe(plumber())
-        .pipe(eslint())
-        .pipe(eslint.format())
-        .pipe(eslint.failAfterError())
-        .pipe(babel({presets: ['es2015']}))
+        .pipe(babel({
+            presets: ['es2015'],
+            plugins: [ 
+            //     // es2015 - based off of v6.3.13
+            //     // https://github.com/babel/babel/tree/master/packages
+            //     [
+            //         require('babel-plugin-transform-es2015-template-literals'), {
+            //             loose: true
+            //         }
+            //     ],
+            //     require('babel-plugin-transform-es2015-literals'),
+            //     require('babel-plugin-transform-es2015-function-name'),
+            //     require('babel-plugin-transform-es2015-arrow-functions'),
+            //     require('babel-plugin-transform-es2015-block-scoped-functions'),
+                [require('babel-plugin-transform-es2015-classes'), {loose: true}],
+                require('babel-plugin-transform-es2015-object-super'),
+                require('babel-plugin-syntax-export-extensions'),
+            //     require('babel-plugin-transform-es2015-shorthand-properties'),
+            //     require('babel-plugin-transform-es2015-computed-properties'),
+            //     [
+            //         require('babel-plugin-transform-es2015-for-of'), {
+            //             loose: true
+            //         }
+            //     ],
+            //     require('babel-plugin-transform-es2015-sticky-regex'),
+            //     require('babel-plugin-transform-es2015-unicode-regex'),
+            //     require('babel-plugin-check-es2015-constants'),
+            //     require('babel-plugin-transform-es2015-spread'),
+            //     require('babel-plugin-transform-es2015-parameters'),
+            //     require('babel-plugin-transform-es2015-destructuring'),
+            //     require('babel-plugin-transform-es2015-block-scoping'),
+            //     require('babel-plugin-transform-es2015-typeof-symbol'),
+            //     require('babel-plugin-transform-es2015-modules-commonjs'),
+                [
+                    require('babel-plugin-transform-regenerator'), {
+                        async: false,
+                        asyncGenerators: false
+                    }
+                ],
+            //     // compatibility
+                require('babel-plugin-transform-object-assign'),
+                require('babel-plugin-transform-es3-member-expression-literals'),
+                require('babel-plugin-transform-es3-property-literals'),
+                // require('babel-plugin-transform-jscript'),
+                // require('babel-plugin-transform-undefined-to-void')
+            ]
+        }))
         // .pipe(webpack( webpackConfig ))
         .pipe(gulpif(options.env === 'production', uglify())) // 仅在生产环境时候进行压缩
         .pipe(gulp.dest(buildPath.js))
         .pipe(reload({stream: true}))
+        
 
     // lib 插件
-    var libmin = gulp
+    // var libmin = gulp
+    //     .src(devPath.lib)
+    //     .pipe(plumber())
+    //     .pipe(gulp.dest(buildPath.lib))
+    //     .pipe(reload({stream: true}))
+
+    return mergeStream(lint, jsmin);
+})
+
+gulp.task('libmin', function () {
+    // lib 插件
+    return gulp
         .src(devPath.lib)
         .pipe(plumber())
         .pipe(gulp.dest(buildPath.lib))
         .pipe(reload({stream: true}))
-
-    return mergeStream(jsmin, libmin);
 })
 
 /* webpack */
@@ -237,6 +313,11 @@ gulp.task('watch', function () {
         .on('change', function (event) {
             watchFile(event);
         });
+     gulp
+        .watch(devPath.lib, ['libmin'])
+        .on('change', function (event) {
+            watchFile(event);
+        });
     // 看守所有图片文件
     gulp
         .watch(devPath.image, ['images'])
@@ -251,7 +332,7 @@ gulp.task('watch', function () {
 gulp.task('server', ['clean'], function () {
 
     gulpSequence([
-        'cssmin', 'images', 'htmlmin', 'jsmin'
+        'cssmin', 'images', 'htmlmin', 'jsmin', 'libmin'
     ], function () {
 
         gutil.log(gutil.colors.green('启动本地服务器'));
@@ -294,7 +375,7 @@ gulp.task('server', ['clean'], function () {
 /* 打包 输入命令：npm run build 或者 gulp build --env production */
 gulp.task('build', ['clean'], function () {
     gulpSequence([
-        'cssmin', 'images', 'htmlmin', 'jsmin'
+        'cssmin', 'images', 'htmlmin', 'jsmin', 'libmin'
     ], function () {
         gulp.start('zip');
         gutil.log(gutil.colors.green('message：项目已经打包完成'))
