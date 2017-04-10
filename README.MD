@@ -1,12 +1,16 @@
-## gulp搭建前端项目
+## gulp前端项目
 
-使用gulp前端自动化构建工具搭建前端项目，作为初始化项目
+
+> 使用gulp前端自动化构建工具搭建前端项目，作为初始化项目
+>
+> 本项目集成了检查、合并、压缩、格式化、浏览器自动刷新、部署文件生成，热更新，以及利用代理请求解决跨域问题
+>
+> 本项目可以与 webpack结合使用，如果需要webpack模块加载器工具，可以在gulpfile文件设置即可 
+
 
 #### 初识 gulp
 
-<table><tr><td bgcolor=#cf4646>
-    ![](http://www.gulpjs.com.cn/img/gulp-white-text.svg)
-</td></tr></table>
+![](http://www.gulpjs.com.cn/img/gulp.png)
 
 简介：<br />
  gulp是前端开发过程中对代码进行构建的工具，是自动化项目的构建利器；她不仅能对网站资源进行优化，而且在开发过程中很多重复的任务能够使用正确的工具自动完成；使用她，我们不仅可以很愉快的编写代码，而且大大提高我们的工作效率。
@@ -72,22 +76,22 @@ $ cnpm init
 
 #### 目录结构
 ```bash
-│  gulpfile.js       //gulp配置文件
-│  package.json      //package.json  配置文件
-│  README.MD         //说明
-│  tree.txt
+│  gulpfile.js       // gulp配置文件
+│  package.json      // package.json 配置文件
+│  README.MD         // 说明
+│  .eslintrc         // js语法检查
 │  
-├─build              //线上项目 或者 开发环境项目            
+├─build              // 线上项目 或者 开发环境项目            
 ├─node_modules 
-└─src                //项目主目录
+└─src                // 项目主目录
     │  index.html
     │  
-    ├─assets         //资源文件  
+    ├─assets         // 资源文件  
     │  ├─css
     │  ├─images
     │  ├─js
     │  └─lib
-    └─page           //页面文件
+    └─page           // 页面文件
     │  └─home.html
 ```
 
@@ -103,4 +107,23 @@ css代码压缩：      gulp cssmin
 html代码压缩：     gulp htmlmin
 图片压缩：         gulp images
 监听文件：         gulp watch
+```
+
+
+#### ESLint规范代码
+>ESLint
+>
+>为什么使用ESLint
+>
+>在开发项目中，团队每一个成员都会有自己的习惯性的代码风格，所以在团队协作中，容易产生几套不同的代码风格，这样整个项目的代码连贯起来可读性差，也容易冗余的代码和产出低级bug。为了解决这个问题，我们会制定一套编码规范来管理。所以项目中使用使用 ESLint 工具和代码风格检测工具，则可以辅助编码规范执行，有效控制代码质量。
+
+
+ESLint 详尽使用参见**[官方文档](http://http://eslint.org/docs/user-guide/configuring)**，**[中文文档](http://http://eslint.cn/docs/user-guide/configuring)**
+
+[规则定义链接](http://dudodo.cc/2017/04/06/ESLint%E8%A7%84%E8%8C%83%E4%BB%A3%E7%A0%81%E4%B9%A6%E5%86%99/#more)
+
+
+#### 项目地址[github url](https://github.com/vincentSea/gulp-demo)
+```bash
+$ git clone git@github.com:vincentSea/gulp-demo.git
 ```
