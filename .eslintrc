@@ -321,7 +321,7 @@
         "computed-property-spacing": [2, "never"],
         // 用于指统一在回调函数中指向this的变量名，箭头函数中的this已经可以指向外层调用者，应该没卵用了
         // e.g [0,"that"] 指定只能 var that = this. that不能指向其他任何值，this也不能赋值给that以外的其他值
-        "consistent-this": [1, "that"],
+        "consistent-this": [0, "that"],
         // 文件末尾强制换行
         "eol-last": 1,
         // 不允许函数标识符与其调用之间有间距
