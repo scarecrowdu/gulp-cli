@@ -51,4 +51,4 @@ Temporary Items
 node_modules
 zip
 build
-debug.log
+*.log
