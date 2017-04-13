@@ -38,10 +38,7 @@ var knownOptions = {
 var options = minimist(process.argv.slice(2), knownOptions);
 
 // 代理请求的ip+项目名
-var proxyUrl = {
-    ip: 'http://192.168.1.250',
-    route: '/mBet'
-};
+var config = require('./config.js');
 
 // 项目目录
 var Root = {
@@ -349,12 +346,12 @@ gulp.task('server', ['clean'], function() {
     ], function() {
 
         gutil.log(gutil.colors.green('启动本地服务器'));
-        gutil.log(gutil.colors.green('代理请求地址：' + proxyUrl.ip));
-        gutil.log(gutil.colors.green('代理请求项目：' + proxyUrl.route));
+        gutil.log(gutil.colors.green('代理请求地址：' + config.proxyTable.target));
+        gutil.log(gutil.colors.green('代理请求项目：' + config.proxyTable.inner));
 
         // var files = [buildPath.html, buildPath.css, buildPath.js, buildPath.image];
-        var proxyOptions = url.parse(proxyUrl.ip + proxyUrl.route);
-        proxyOptions.route = proxyUrl.route;
+        var proxyOptions = url.parse(config.proxyTable.target + config.proxyTable.inner);
+        proxyOptions.route = config.proxyTable.inner;
 
         browserSync.init({ // 初始化 BrowserSync
             injectChanges: true, // 插入更改
@@ -372,14 +369,11 @@ gulp.task('server', ['clean'], function() {
             logPrefix: 'browserSync in gulp', // 再控制台打印前缀
             // browser: ["chrome"], //运行后自动打开的；浏览器 （不填默认则是系统设置的默认浏览器）
             open: true, //       自动打开浏览器
-            port: 8080 // 使用端口
+            port: config.port   // 使用端口
         });
 
         // 监听watch
         gulp.start('watch');
-        // gulp.watch(['src/**']).on('change', function(file) {
-        //     console.log(file)
-        // });
 
     });
 
