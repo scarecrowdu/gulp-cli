@@ -78,19 +78,28 @@ $ cnpm init
 ```bash
 │  gulpfile.js       // gulp配置文件
 │  package.json      // package.json 配置文件
-│  README.MD         // 说明
+│  README.MD         // 项目说明
+|  .gitignore        // git文件过滤
+|  .eslintignore     // eslint文件过滤
 │  .eslintrc         // js语法检查
 │  
-├─build              // 线上项目 或者 开发环境项目            
+├─build              // 线上项目 或者 开发环境项目
+|        
 ├─node_modules 
+|
 └─src                // 项目主目录
     │  index.html
     │  
-    ├─assets         // 资源文件  
-    │  ├─css
-    │  ├─images
-    │  ├─js
-    │  └─lib
+    ├─assets         // 资源文件
+    |  |
+    │  ├─css         // 样式文件
+    |  |
+    │  ├─images      // 图片文件
+    |  |
+    │  ├─js          // js文件
+    |  |
+    │  └─lib         // 插件文件
+    |
     └─page           // 页面文件
     │  └─home.html
 ```
@@ -125,5 +134,5 @@ ESLint 详尽使用参见**[官方文档](http://http://eslint.org/docs/user-gui
 
 #### 项目地址[github url](https://github.com/vincentSea/gulp-demo)
 ```bash
-$ git clone git@github.com:vincentSea/gulp-demo.git
+$ git clone git@github.com:vincentSea/gulp-demo.gitls
 ```
