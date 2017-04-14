@@ -37,7 +37,7 @@ var knownOptions = {
 };
 var options = minimist(process.argv.slice(2), knownOptions);
 
-// 代理请求的ip+项目名
+// 代理请求和端口设置
 var config = require('./config.js');
 
 // 项目目录
