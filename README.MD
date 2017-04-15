@@ -26,6 +26,11 @@
 PC端项目，我们推荐使用Gulp，Gulp基于nodejs中stream，工作流，效率更好语法更自然,不需要编写复杂的配置文件
 
 
+**[演示项目](https://github.com/vincentSea/gulp-demo)**
+```bash
+git clone git@github.com:vincentSea/gulp-demo.git
+```
+
 ### 初识 gulp
 
  **简介**
