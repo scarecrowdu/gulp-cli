@@ -3,6 +3,8 @@
 src/assets/lib/**/*.js
 
 build/
+static/
 
 webpack.config.js
 gulpfile.js
+config.js

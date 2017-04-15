@@ -2,7 +2,7 @@
  * dalkjlksa
  */
 function a() {
-    // adshk
+    console.log('test js');
 };
 
 a();
