@@ -81,12 +81,17 @@ var cnEnvironment = function(cb) {
  * @param {any} error 
  */
 var onError = function(error){
+    var title = error.plugin + ' ' + error.name;
+    var msg = error.message;
+    var errContent = msg.replace(/\n/g, '\\A '); // replace to `\A`, `\n` is not allowed in css content
+
     // system notification
     notify.onError({
-        title: '<%= error.file %>',
-        message: 'Failed\n<%= error.message %>', 
+        title: title,
+        message: errContent, 
         sound: true
     })(error);
+    
     // prevent gulp process exit
     this.emit('end');
 };
