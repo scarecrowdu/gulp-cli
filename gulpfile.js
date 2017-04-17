@@ -54,7 +54,7 @@ var options = minimist(process.argv.slice(2), knownOptions);
  * 
  * @param {any} cb 回调
  */
-function cnEnvironment(cb) {
+var cnEnvironment = function(cb) {
 
    // 先执行清空文件夹内容
    del(config.rootBuild).then(paths => {
@@ -75,6 +75,26 @@ function cnEnvironment(cb) {
     });
 }
 
+/**
+ * 错误输出
+ * 
+ * @param {any} error 
+ */
+var onError = function(error){
+    var title = error.plugin + ' ' + error.name;
+    var msg = error.message;
+    var errContent = msg.replace(/\n/g, '\\A '); // replace to `\A`, `\n` is not allowed in css content
+
+    // system notification
+    notify.onError({
+        title: title,
+        message: errContent, 
+        sound: true
+    })(error);
+    
+    // prevent gulp process exit
+    this.emit('end');
+};
 
 /* html 打包*/
 gulp.task('htmlmin', function() {
@@ -91,7 +111,7 @@ gulp.task('htmlmin', function() {
 
     return gulp
         .src([config.dev.html, '!*.tpl'], { base: config.rootDev })
-        .pipe(plumber())
+        .pipe(plumber(onError))
         .pipe(fileinclude({
             prefix: '@@', 
             basepath: '@file'
@@ -118,8 +138,9 @@ gulp.task('cssmin', function() {
 
     return gulp
         .src(config.dev.css)
-        .pipe(plumber())
-        .pipe(sass().on('error', sass.logError))
+        .pipe(plumber(onError))
+        .pipe(sass())
+        // .pipe(sass().on('error', sass.logError))
         .pipe(autoprefixer(AUTOPREFIXER_BROWSERS))
         .pipe(gulpif(options.env === 'production', minifycss()))
         .pipe(gulp.dest(config.build.css))
@@ -130,7 +151,7 @@ gulp.task('cssmin', function() {
 gulp.task('eslint', function() {
    return gulp
     .src([config.dev.js, '!node_modules/**'])
-    .pipe(plumber())
+    .pipe(plumber(onError))
     .pipe(eslint({ configFle: './.eslintrc' }))
     .pipe(eslint.format())
     .pipe(eslint.failAfterError());
@@ -140,7 +161,7 @@ gulp.task('eslint', function() {
 gulp.task('jsmin', ['eslint'], function() {
     var jsmin = gulp
         .src([config.dev.js, '!node_modules/**'])
-        .pipe(plumber())
+        .pipe(plumber(onError))
         .pipe(babel({
             presets: ['es2015'],
             plugins: [
@@ -168,7 +189,7 @@ gulp.task('libmin', function() {
     // lib 插件
     return gulp
         .src(config.dev.lib)
-        .pipe(plumber())
+        .pipe(plumber(onError))
         .pipe(gulp.dest(config.build.lib))
         .pipe(reload({ stream: true }));
 });
@@ -186,7 +207,7 @@ gulp.task('webpack', function() {
 gulp.task('images', () => {
     return gulp
         .src(config.dev.image)
-        .pipe(plumber())
+        .pipe(plumber(onError))
         .pipe(cache(imagemin({
             progressive: true,
             svgoPlugins: [{
@@ -233,7 +254,7 @@ gulp.task('zip', function() {
     
     return gulp
         .src(config.build.zip)
-        .pipe(plumber())
+        .pipe(plumber(onError))
         .pipe(zip(build))
         .pipe(gulp.dest(config.rootZip))
         .pipe(notify({ message: 'Zip task complete' }));
@@ -280,7 +301,7 @@ gulp.task('server', function() {
                 scroll: true // 同步滚动
             },
             logPrefix: 'browserSync in gulp', // 再控制台打印前缀
-            // browser: ["chrome"], //运行后自动打开的；浏览器 （不填默认则是系统设置的默认浏览器）
+            browser: ["chrome"], //运行后自动打开的；浏览器 （不填默认则是系统设置的默认浏览器）
             open: true, //       自动打开浏览器
             port: config.port   // 使用端口
         });
