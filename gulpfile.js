@@ -3,6 +3,9 @@
  * gulpfile.js 配置文件
  * 
  */
+var fs            = require('fs');
+var path          = require('path');
+
 var gulp          = require('gulp');
 var sass          = require('gulp-sass'); // sass的编译
 var autoprefixer  = require('gulp-autoprefixer'); // 自动添加css前缀
@@ -25,6 +28,8 @@ var minimist      = require('minimist');
 var gulpSequence  = require('gulp-sequence'); // 顺序执行
 var eslint        = require('gulp-eslint'); // 代码风格检测工具
 var del           = require('del'); // 删除文件
+
+var spritesmith   = require('gulp.spritesmith'); // 生成雪碧图 https://github.com/twolfson/gulp.spritesmith
 
 // 结合webpack
 var webpack       = require('gulp-webpack');
@@ -64,7 +69,7 @@ var cnEnvironment = function(cb) {
         
         // 执行项目打包
         gulpSequence([
-            'cssmin', 'images', 'htmlmin', 'jsmin', 'libmin'
+            'htmlmin', 'cssmin', 'images', 'jsmin', 'libmin'
         ], function() {
 
             gutil.log(gutil.colors.green('Message：Compile finished!'));
@@ -95,6 +100,77 @@ var onError = function(error){
     // prevent gulp process exit
     this.emit('end');
 };
+
+
+var srcDir = path.resolve(process.cwd(), config.sprite);
+/**
+ * 获取获取文件名字和路径
+ * @returns 
+ */
+var iconFolder = function() {
+    var filesSrc = []; // 文件路径
+    var filesName = []; // 文件名字
+    
+    // 遍历获取文件名字和路径
+    fs.readdirSync(srcDir).forEach(function(file, i){
+        var reg = /\.(png|jpg|gif|ico)/g;
+        var isImg = file.match(reg);
+
+        // 判读是  file.indexOf('sprite') != -1
+        if(!isImg){
+            filesName.push(file);
+            filesSrc.push(path.resolve(srcDir, file, '*.{png,jpg}'));
+        }
+    });
+
+    // 返回文件名字和路径
+    return {
+        'name': filesName,
+        'src' : filesSrc
+    };;
+}
+
+/**
+ * 
+ * 支持多个文件夹编译生成雪碧图
+ * 雪碧图制作规定要求
+ * 在images文件夹下icon文件夹,新建一个文件夹就可以
+ * 
+ */
+var csssPrites = function() {
+    var folder = iconFolder();
+    var folderName = folder.name;
+    var folderSrc = folder.src;
+
+    folderSrc.forEach(function (item, i) {
+        var imgName = `assets/images/icon/${folderName[i]}.png`;
+        var cssName = `assets/css/icon/${folderName[i]}.scss`;
+
+        return gulp.src(item) // 需要合并的图片地址
+            .pipe(spritesmith({
+                imgName: imgName, // 保存合并后图片的地址
+                cssName: cssName, // 保存合并后对于css样式的地址
+                padding: 10,  // 合并时两个图片的间距
+                algorithm: 'binary-tree', // 注释1
+                cssTemplate: './cssTemplate.tpl' // 模板
+                // cssTemplate: function (data) {
+                //     var arr=[];
+                //     data.sprites.forEach(function (sprite) {
+                //         arr.push(".icon-"+sprite.name+
+                //         "{" +
+                //         "background-image: url('"+sprite.escaped_image+"');"+
+                //         "background-position: "+sprite.px.offset_x+"px "+sprite.px.offset_y+"px;"+
+                //         "width:"+sprite.px.width+";"+
+                //         "height:"+sprite.px.height+";"+
+                //         "}\n");
+                //     });
+                //     return arr.join("");
+                // }
+            }))
+            .pipe(gulp.dest('src/'));
+    })
+}
+
 
 /* html 打包*/
 gulp.task('htmlmin', function() {
@@ -219,6 +295,13 @@ gulp.task('images', () => {
         .pipe(reload({ stream: true }));
 });
 
+/* 生成雪碧图 */ 
+gulp.task('sprites', function () {
+    // 执行任务
+    csssPrites();
+});
+
+
 /* clean 清除*/
 gulp.task('clean', function() {
     // return gulp
@@ -277,7 +360,7 @@ gulp.task('watch', function() {
 });
 
 /* server 服务器 */
-gulp.task('server', function() {
+gulp.task('server', ['sprites'], function() {
 
    cnEnvironment(function(){
         gutil.log(gutil.colors.green('启动本地服务器'));
@@ -313,7 +396,7 @@ gulp.task('server', function() {
 });
 
 /* build 打包项目 */
-gulp.task('build', function() {
+gulp.task('build', ['sprites'], function() {
     cnEnvironment(function(){
         gulp.start('zip', function(){
            gutil.log(gutil.colors.green('Message：Project package is complete'));
@@ -332,3 +415,7 @@ gulp.task('default', function() {
     gutil.log(gutil.colors.green('编译图片压缩：      gulp images'));
     gutil.log(gutil.colors.green('监听所有文件：      gulp watch'));
 });
+
+
+
+

@@ -25,12 +25,12 @@ module.exports = {
     // 未编译的路径
     dev: {
         html : ROOT_DEV + '/**/*.html',
-        css  : ROOT_DEV + '/assets/css/*.scss',
+        css  : ROOT_DEV + '/assets/css/*.{scss,css}',
         scss : ROOT_DEV + '/assets/css/**/*.scss',
         js   : ROOT_DEV + '/assets/js/**/*.js',
         lib  : ROOT_DEV + '/assets/lib/**/*',
-        image: ROOT_DEV + '/assets/images/**/*.{png,jpg,gif,ico}',
-        tpl  : ROOT_DEV + '/**/*.tpl'
+        image: [ROOT_DEV + '/assets/images/**/*.{png,jpg,gif,ico}', '!'+ ROOT_DEV + '/assets/images/sprite/**/'],
+        tpl  : ROOT_DEV + '/**/*.tpl',
     },
 
     // 编译过后的路径
@@ -41,6 +41,9 @@ module.exports = {
         lib  : ROOT_BUILD + '/assets/lib/',
         image: ROOT_BUILD + '/assets/images/',
         zip  : ROOT_BUILD + '/**/*'
-    }
+    },
+
+    // 雪碧图
+    sprite: ROOT_DEV + '/assets/images/sprite'
 };
 

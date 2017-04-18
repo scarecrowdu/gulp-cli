@@ -54,6 +54,7 @@
     "gulp-util": "^3.0.8",
     "gulp-webpack": "^1.5.0",
     "gulp-zip": "^3.2.0",
+    "gulp.spritesmith": "^6.4.0",
     "imagemin-pngquant": "^5.0.0",
     "merge-stream": "^1.0.0",
     "minimist": "^1.2.0",
