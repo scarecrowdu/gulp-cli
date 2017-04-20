@@ -122,7 +122,6 @@ var iconFolder = function() {
             filesSrc.push(path.resolve(srcDir, file, '*.{png,jpg}'));
         }
     });
-
     // 返回文件名字和路径
     return {
         'name': filesName,
@@ -143,8 +142,8 @@ var csssPrites = function() {
     var folderSrc = folder.src;
 
     folderSrc.forEach(function (item, i) {
-        var imgName = `assets/images/icon/${folderName[i]}.png`;
-        var cssName = `assets/css/icon/${folderName[i]}.scss`;
+        var imgName = `images/icon/icon_${folderName[i]}.png`;
+        var cssName = `css/icon_${folderName[i]}.scss`;
 
         return gulp.src(item) // 需要合并的图片地址
             .pipe(spritesmith({
@@ -167,7 +166,7 @@ var csssPrites = function() {
                 //     return arr.join("");
                 // }
             }))
-            .pipe(gulp.dest('src/'));
+            .pipe(gulp.dest('src/assets/'));
     })
 }
 
@@ -357,10 +356,12 @@ gulp.task('watch', function() {
     gulp.watch(config.dev.lib, ['libmin'])
     // 看守所有图片文件
     gulp.watch(config.dev.image, ['images'])
+    // 看守所有雪碧图
+    gulp.watch(config.dev.image, ['sprites'])
 });
 
 /* server 服务器 */
-gulp.task('server', ['sprites'], function() {
+gulp.task('server', function() {
 
    cnEnvironment(function(){
         gutil.log(gutil.colors.green('启动本地服务器'));
@@ -396,7 +397,7 @@ gulp.task('server', ['sprites'], function() {
 });
 
 /* build 打包项目 */
-gulp.task('build', ['sprites'], function() {
+gulp.task('build', function() {
     cnEnvironment(function(){
         gulp.start('zip', function(){
            gutil.log(gutil.colors.green('Message：Project package is complete'));

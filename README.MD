@@ -10,9 +10,11 @@
       4. 压缩图片
       5. 压缩CSS
       6. 压缩JS
-      7. 静态服务器
-      8. 代理解决跨域
-      7. 打包项目
+      7. 雪碧图制作
+      8. 静态服务器
+      9. 代理解决跨域
+      10. 打包项目
+
 
 
 **目前最知名的构建工具： Gulp、Grunt、NPM + Webpack；**
@@ -105,6 +107,7 @@ tree命令     tree /f     显示树形结构
   - 编译es6语法
   - 压缩Javascript
   - 无损压缩图片
+  - 雪碧图制作
   - 创建静态服务器
   - 设置代理解决跨域
   - 打包项目且生成压缩包
@@ -163,13 +166,104 @@ tree命令     tree /f     显示树形结构
     gulp-eslint:          代码风格检测工具
     del:                  删除文件
 
+
+#### 制作雪碧图 (支持同时制作多个)
+规定如下
+1. 在src/assets/image中，sprite是作为需要制作雪碧图的文件夹
+2. 在sprite文件夹下，必须新建一个文件夹，例如user文件夹，me文件，存放你的图标
+3. 执行gulp sprites任务
+4. 任务完成，在src/assets/image中就会生成一个icon文件夹，里面就是生成的雪碧图，在src/assets/css会生成雪碧图的scss样式文件
+
+``` javascript
+var srcDir = path.resolve(process.cwd(), config.sprite);
+/**
+ * 获取获取文件名字和路径
+ * @returns 
+ */
+var iconFolder = function() {
+    var filesSrc = []; // 文件路径
+    var filesName = []; // 文件名字
+    
+    // 遍历获取文件名字和路径
+    fs.readdirSync(srcDir).forEach(function(file, i){
+        var reg = /\.(png|jpg|gif|ico)/g;
+        var isImg = file.match(reg);
+
+        // 判读是  file.indexOf('sprite') != -1
+        if(!isImg){
+            filesName.push(file);
+            filesSrc.push(path.resolve(srcDir, file, '*.{png,jpg}'));
+        }
+    });
+    // 返回文件名字和路径
+    return {
+        'name': filesName,
+        'src' : filesSrc
+    };;
+}
+
+/**
+ * 
+ * 支持多个文件夹编译生成雪碧图
+ * 雪碧图制作规定要求
+ * 在images文件夹下icon文件夹,新建一个文件夹就可以
+ * 
+ */
+var csssPrites = function() {
+    var folder = iconFolder();
+    var folderName = folder.name;
+    var folderSrc = folder.src;
+
+    folderSrc.forEach(function (item, i) {
+        var imgName = `images/icon/icon_${folderName[i]}.png`;
+        var cssName = `css/icon_${folderName[i]}.scss`;
+
+        return gulp.src(item) // 需要合并的图片地址
+            .pipe(spritesmith({
+                imgName: imgName, // 保存合并后图片的地址
+                cssName: cssName, // 保存合并后对于css样式的地址
+                padding: 10,  // 合并时两个图片的间距
+                algorithm: 'binary-tree', // 注释1
+                cssTemplate: './cssTemplate.tpl' // 模板
+                // cssTemplate: function (data) {
+                //     var arr=[];
+                //     data.sprites.forEach(function (sprite) {
+                //         arr.push(".icon-"+sprite.name+
+                //         "{" +
+                //         "background-image: url('"+sprite.escaped_image+"');"+
+                //         "background-position: "+sprite.px.offset_x+"px "+sprite.px.offset_y+"px;"+
+                //         "width:"+sprite.px.width+";"+
+                //         "height:"+sprite.px.height+";"+
+                //         "}\n");
+                //     });
+                //     return arr.join("");
+                // }
+            }))
+            .pipe(gulp.dest('src/assets/'));
+    })
+}
+
+
+
+/* 生成雪碧图 */ 
+gulp.task('sprites', function () {
+    // 执行任务
+    csssPrites();
+});
+
+```
+
+
 #### gulpfile.js内容
 ```javascript
-/**
+//**
  * gulp 自动化构建工具
  * gulpfile.js 配置文件
  * 
  */
+var fs            = require('fs');
+var path          = require('path');
+
 var gulp          = require('gulp');
 var sass          = require('gulp-sass'); // sass的编译
 var autoprefixer  = require('gulp-autoprefixer'); // 自动添加css前缀
@@ -192,6 +286,8 @@ var minimist      = require('minimist');
 var gulpSequence  = require('gulp-sequence'); // 顺序执行
 var eslint        = require('gulp-eslint'); // 代码风格检测工具
 var del           = require('del'); // 删除文件
+
+var spritesmith   = require('gulp.spritesmith'); // 生成雪碧图 https://github.com/twolfson/gulp.spritesmith
 
 // 结合webpack
 var webpack       = require('gulp-webpack');
@@ -221,7 +317,7 @@ var options = minimist(process.argv.slice(2), knownOptions);
  * 
  * @param {any} cb 回调
  */
-function cnEnvironment(cb) {
+var cnEnvironment = function(cb) {
 
    // 先执行清空文件夹内容
    del(config.rootBuild).then(paths => {
@@ -231,7 +327,7 @@ function cnEnvironment(cb) {
         
         // 执行项目打包
         gulpSequence([
-            'cssmin', 'images', 'htmlmin', 'jsmin', 'libmin'
+            'htmlmin', 'cssmin', 'images', 'jsmin', 'libmin'
         ], function() {
 
             gutil.log(gutil.colors.green('Message：Compile finished!'));
@@ -240,6 +336,96 @@ function cnEnvironment(cb) {
 
         });
     });
+}
+
+/**
+ * 错误输出
+ * 
+ * @param {any} error 
+ */
+var onError = function(error){
+    var title = error.plugin + ' ' + error.name;
+    var msg = error.message;
+    var errContent = msg.replace(/\n/g, '\\A '); // replace to `\A`, `\n` is not allowed in css content
+
+    // system notification
+    notify.onError({
+        title: title,
+        message: errContent, 
+        sound: true
+    })(error);
+    
+    // prevent gulp process exit
+    this.emit('end');
+};
+
+
+var srcDir = path.resolve(process.cwd(), config.sprite);
+/**
+ * 获取获取文件名字和路径
+ * @returns 
+ */
+var iconFolder = function() {
+    var filesSrc = []; // 文件路径
+    var filesName = []; // 文件名字
+    
+    // 遍历获取文件名字和路径
+    fs.readdirSync(srcDir).forEach(function(file, i){
+        var reg = /\.(png|jpg|gif|ico)/g;
+        var isImg = file.match(reg);
+
+        // 判读是  file.indexOf('sprite') != -1
+        if(!isImg){
+            filesName.push(file);
+            filesSrc.push(path.resolve(srcDir, file, '*.{png,jpg}'));
+        }
+    });
+    // 返回文件名字和路径
+    return {
+        'name': filesName,
+        'src' : filesSrc
+    };;
+}
+
+/**
+ * 
+ * 支持多个文件夹编译生成雪碧图
+ * 雪碧图制作规定要求
+ * 在images文件夹下icon文件夹,新建一个文件夹就可以
+ * 
+ */
+var csssPrites = function() {
+    var folder = iconFolder();
+    var folderName = folder.name;
+    var folderSrc = folder.src;
+
+    folderSrc.forEach(function (item, i) {
+        var imgName = `images/icon/icon_${folderName[i]}.png`;
+        var cssName = `css/icon_${folderName[i]}.scss`;
+
+        return gulp.src(item) // 需要合并的图片地址
+            .pipe(spritesmith({
+                imgName: imgName, // 保存合并后图片的地址
+                cssName: cssName, // 保存合并后对于css样式的地址
+                padding: 10,  // 合并时两个图片的间距
+                algorithm: 'binary-tree', // 注释1
+                cssTemplate: './cssTemplate.tpl' // 模板
+                // cssTemplate: function (data) {
+                //     var arr=[];
+                //     data.sprites.forEach(function (sprite) {
+                //         arr.push(".icon-"+sprite.name+
+                //         "{" +
+                //         "background-image: url('"+sprite.escaped_image+"');"+
+                //         "background-position: "+sprite.px.offset_x+"px "+sprite.px.offset_y+"px;"+
+                //         "width:"+sprite.px.width+";"+
+                //         "height:"+sprite.px.height+";"+
+                //         "}\n");
+                //     });
+                //     return arr.join("");
+                // }
+            }))
+            .pipe(gulp.dest('src/assets/'));
+    })
 }
 
 
@@ -258,7 +444,7 @@ gulp.task('htmlmin', function() {
 
     return gulp
         .src([config.dev.html, '!*.tpl'], { base: config.rootDev })
-        .pipe(plumber())
+        .pipe(plumber(onError))
         .pipe(fileinclude({
             prefix: '@@', 
             basepath: '@file'
@@ -285,8 +471,9 @@ gulp.task('cssmin', function() {
 
     return gulp
         .src(config.dev.css)
-        .pipe(plumber())
-        .pipe(sass().on('error', sass.logError))
+        .pipe(plumber(onError))
+        .pipe(sass())
+        // .pipe(sass().on('error', sass.logError))
         .pipe(autoprefixer(AUTOPREFIXER_BROWSERS))
         .pipe(gulpif(options.env === 'production', minifycss()))
         .pipe(gulp.dest(config.build.css))
@@ -297,7 +484,7 @@ gulp.task('cssmin', function() {
 gulp.task('eslint', function() {
    return gulp
     .src([config.dev.js, '!node_modules/**'])
-    .pipe(plumber())
+    .pipe(plumber(onError))
     .pipe(eslint({ configFle: './.eslintrc' }))
     .pipe(eslint.format())
     .pipe(eslint.failAfterError());
@@ -307,7 +494,7 @@ gulp.task('eslint', function() {
 gulp.task('jsmin', ['eslint'], function() {
     var jsmin = gulp
         .src([config.dev.js, '!node_modules/**'])
-        .pipe(plumber())
+        .pipe(plumber(onError))
         .pipe(babel({
             presets: ['es2015'],
             plugins: [
@@ -335,7 +522,7 @@ gulp.task('libmin', function() {
     // lib 插件
     return gulp
         .src(config.dev.lib)
-        .pipe(plumber())
+        .pipe(plumber(onError))
         .pipe(gulp.dest(config.build.lib))
         .pipe(reload({ stream: true }));
 });
@@ -353,7 +540,7 @@ gulp.task('webpack', function() {
 gulp.task('images', () => {
     return gulp
         .src(config.dev.image)
-        .pipe(plumber())
+        .pipe(plumber(onError))
         .pipe(cache(imagemin({
             progressive: true,
             svgoPlugins: [{
@@ -364,6 +551,13 @@ gulp.task('images', () => {
         .pipe(gulp.dest(config.build.image))
         .pipe(reload({ stream: true }));
 });
+
+/* 生成雪碧图 */ 
+gulp.task('sprites', function () {
+    // 执行任务
+    csssPrites();
+});
+
 
 /* clean 清除*/
 gulp.task('clean', function() {
@@ -400,7 +594,7 @@ gulp.task('zip', function() {
     
     return gulp
         .src(config.build.zip)
-        .pipe(plumber())
+        .pipe(plumber(onError))
         .pipe(zip(build))
         .pipe(gulp.dest(config.rootZip))
         .pipe(notify({ message: 'Zip task complete' }));
@@ -420,6 +614,8 @@ gulp.task('watch', function() {
     gulp.watch(config.dev.lib, ['libmin'])
     // 看守所有图片文件
     gulp.watch(config.dev.image, ['images'])
+    // 看守所有雪碧图
+    gulp.watch(config.dev.image, ['sprites'])
 });
 
 /* server 服务器 */
@@ -447,7 +643,7 @@ gulp.task('server', function() {
                 scroll: true // 同步滚动
             },
             logPrefix: 'browserSync in gulp', // 再控制台打印前缀
-            // browser: ["chrome"], //运行后自动打开的；浏览器 （不填默认则是系统设置的默认浏览器）
+            browser: ["chrome"], //运行后自动打开的；浏览器 （不填默认则是系统设置的默认浏览器）
             open: true, //       自动打开浏览器
             port: config.port   // 使用端口
         });
@@ -478,6 +674,7 @@ gulp.task('default', function() {
     gutil.log(gutil.colors.green('编译图片压缩：      gulp images'));
     gutil.log(gutil.colors.green('监听所有文件：      gulp watch'));
 });
+
 
 ```
 
