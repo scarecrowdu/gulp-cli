@@ -30,7 +30,7 @@ PC端项目，我们推荐使用Gulp，Gulp基于nodejs中stream，工作流，�
 
 **[演示项目](https://github.com/vincentSea/gulp-demo)**
 ```bash
-git clone git@github.com:vincentSea/gulp-demo.git
+顺手一下，star或者fork
 ```
 
 ### 初识 gulp
