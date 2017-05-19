@@ -28,8 +28,7 @@ var minimist      = require('minimist');
 var gulpSequence  = require('gulp-sequence'); // 顺序执行
 var eslint        = require('gulp-eslint'); // 代码风格检测工具
 var del           = require('del'); // 删除文件
-
-var spritesmith   = require('gulp.spritesmith'); // 生成雪碧图 https://github.com/twolfson/gulp.spritesmith
+var spritesmith   = require('gulp.spritesmith'); // 生成雪碧图  https://github.com/twolfson/gulp.spritesmith
 
 // 结合webpack
 var webpack       = require('gulp-webpack');
@@ -242,6 +241,7 @@ gulp.task('jsmin', ['eslint'], function() {
             plugins: [
                 // es2015 - based off of v6.3.13
                 // https://github.com/babel/babel/tree/master/packages
+                require('babel-plugin-transform-es2015-modules-commonjs'),
                 require('babel-plugin-transform-es2015-object-super'),
                 require('babel-plugin-syntax-export-extensions'),
                 require('babel-plugin-transform-object-assign'),

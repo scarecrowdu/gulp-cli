@@ -1,0 +1,62 @@
+* {
+    margin: 0;
+    padding: 0;
+}
+
+img {
+    vertical-align: middle;
+    border: none;
+}
+
+.itembox {
+    min-height: 80px;
+    padding: 8px 10px;
+    border-bottom: 1px solid #dbdbdb;
+    position: relative;
+}
+.list-item {
+    display: flex;
+
+    .list-item-content {
+        flex: 1;
+        margin-right: 10px;
+
+        .l-title {
+            line-height: 20px;
+            margin-top: 8px;
+            margin-bottom: 10px;
+            position: relative;
+            overflow: hidden;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            word-break: break-all;
+            color: #000;
+            font-size: 14px;
+        }
+
+        .l-msg {
+            display: flex;
+            
+            >span {
+                font-size: 13px;
+                color: #888;
+            }
+
+            .time{
+                margin-left: 10px;
+                margin-right: 5px;
+            }
+
+            .howmuchsee {
+                text-align: right;
+                flex: 1;
+            }
+        }
+    }
+
+    .list-item-pic > img {
+        width: 100px;
+        height: 80px;
+    }
+}
