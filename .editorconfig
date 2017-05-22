@@ -1,0 +1,23 @@
+# EditorConfig可以帮助开发者在不同的编辑器和IDE之间定义和维护一致的代码风格。
+# EditorConfig包含一个用于定义代码格式的文件和一批编辑器插件，这些插件可以让编辑器读取配置文件并依此格式化代码。
+# EditorConfig的配置文件十分易读，并且可以很好的在VCS（Version Control System）下工作。
+
+# EditorConfig is awesome: http://EditorConfig.org
+
+# top-most EditorConfig file
+root = true
+
+# 对所有文件生效
+[*]
+# 文件编码
+charset = utf-8
+# 缩进类型
+indent_style = space
+# 缩进数量
+indent_size = 2
+# 换行符格式
+end_of_line = lf
+# 是否在文件的最后插入一个空行
+insert_final_newline = true
+# 是否删除行尾的空格
+trim_trailing_whitespace = true
