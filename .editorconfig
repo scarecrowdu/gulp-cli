@@ -2,6 +2,7 @@
 # EditorConfig包含一个用于定义代码格式的文件和一批编辑器插件，这些插件可以让编辑器读取配置文件并依此格式化代码。
 # EditorConfig的配置文件十分易读，并且可以很好的在VCS（Version Control System）下工作。
 
+
 # EditorConfig is awesome: http://EditorConfig.org
 
 # top-most EditorConfig file
