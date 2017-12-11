@@ -1,65 +1,81 @@
-var glob = require('glob');
-var path = require('path');
-var webpack = require('webpack');
-var CommonsChunkPlugin = require('webpack/lib/optimize/CommonsChunkPlugin');
+const fs = require('fs')
+const path = require('path')
+const webpack = require('webpack')
+const srcDir = path.resolve(process.cwd(), './src/static/')
 
-/**
- * 获取assets/js文件下的.es6.js文件
- * @return {[type]} [description]
- */
-// function getEntry() {
-//     var entry = {};
-//     glob.sync(__dirname + '/src/assets/js/*.js').forEach(function(name) {
-//         var n = name.match(/([^/]+?)\.js/)[1];
-//         // var key = n.split('.es6')[0];
-//         entry[n] = __dirname + '/src/assets/js/' + n + '.js';
-//     });
-//     return entry;
-// }
-
-var fs = require('fs');
-var srcDir = path.resolve(process.cwd(), 'src/assets');
-
-// 获取多页面的每个入口文件，用于配置中的entry
-function getEntry() {
-    var jsPath = path.resolve(srcDir, 'js');
-    var dirs = fs.readdirSync(jsPath);
-    var matchs = [],
-        files = {};
-    dirs.forEach(function(item) {
-        matchs = item.match(/(.+)\.js$/);
-        // console.log(matchs);
-        if (matchs) {
-            files[matchs[1]] = path.resolve(srcDir, 'js', item);
-        }
-    });
-    // console.log(JSON.stringify(files));
-    return files;
+function resolve(dir) {
+  return path.join(__dirname, './', dir)
 }
 
+function getEntry() {
+    var jsPath = path.resolve(srcDir, 'js')
+    var dirs = fs.readdirSync(jsPath)
+    var matchs = []
+    var files = {}
+    dirs.forEach((item) => {
+        matchs = item.match(/(.+)\.js$/);
+        if (matchs) {
+          files[matchs[1]] = path.resolve(srcDir, 'js', item)
+        }
+    })
+    // console.log(JSON.stringify(files))
+    return files
+}
 
 module.exports = {
-    cache: true,
-    refreshEntry: function() {
-        this.entry = getEntry();
-    },
-    entry: getEntry(),
-    module: {
-        loaders: [{
-            test: /\.js$/,
-            loader: 'babel?presets=es2015',
-            exclude: /node_modules/
-        }]
-    },
-    resolve: {},
-    plugins: [
-        new CommonsChunkPlugin('bundle.js'),
-        // new webpack.optimize.UglifyJsPlugin(),
-    ],
-    // devtool: 'source-map',
-    output: {
-        path: __dirname + '/build/assets/',
-        filename: '[name].js',
-        // sourceMapFilename: '[file].map'
+  cache: true,
+  entry: getEntry(),
+
+  output: {
+    path: __dirname + '/dist/static/',
+    filename: '[name].js',
+  },
+
+
+  resolve: {
+    extensions: ['.js', '.jsx', '.json'],
+    alias: {
+      '@': resolve('src')
     }
-};
+  },
+
+  module: {
+    rules: [
+      {
+        test: /\.js?$/,
+        exclude: /node_modules/,
+        use: [ 'babel-loader' ]
+      },
+      {
+        test: /\.scss$/,
+        use: [
+          { loader: 'style-loader' },
+          { loader: 'css-loader' },
+          { loader: 'sass-loader'},
+          'postcss-loader'
+        ]
+      },
+      {
+        test: /\.(gif|png|jpe?g|svg)$/i,
+        use: [
+          {
+            loader: 'url-loader',
+            options: {
+              name: '[name].[ext]?[hash]',
+              limit: 10000
+            }
+          }
+        ]
+      },
+      {
+        test: /\.(woff2?|eot|ttf|otf)(\?.*)?$/,
+        loader: 'url-loader',
+        options: {
+          limit: 10000,
+          name: 'fonts/[name].[hash:7].[ext]'
+        }
+      }
+    ]
+  }
+}
+

@@ -1,3 +1,15 @@
 {
-  "presets": ["es2015", "stage-0"]
+  "presets": [
+    ["env", {
+      "modules": false,
+      "useBuiltIns": true,
+      "targets": {
+        "safari": "7",
+        "android": "4.0",
+        "browsers": ["last 2 versions", "not ie <= 8"]
+      },
+      "debug": false
+    }],
+    "stage-2"
+  ]
 }

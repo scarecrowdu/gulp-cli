@@ -1,10 +1,5 @@
-# /node_modules and /bower_components ignored by default
-
-src/assets/lib/**/*.js
-
-build/
-static/
-
-webpack.config.js
-gulpfile.js
-config.js
+/build/
+/config/
+/static/
+/dist/
+/*.js
