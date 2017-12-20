@@ -1,12 +1,7 @@
-// import 'babel-polyfill';
-// import '../styles/main.scss';
+const class2type = {};
 
-function log(x, y = 'World') {
-  console.log(`${x}, ${y}`);
-  return { x, y };
-}
+"Boolean Number String Function Array Date RegExp Object Error".split(" ").forEach((item) => {
+  class2type[ "object " + item ] = item.toLowerCase();
+});
 
-log('Hello');
-log('Hello', 'China');
-log('Hello', '');
-log('VINCENT', '');
+console.log(class2type);

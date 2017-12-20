@@ -117,7 +117,9 @@ gulp.task('eslint', () => {
    .pipe(eslint.failAfterError());
 })
 
-gulp.task('script', ['eslint'], () => {
+
+const useEslint = config.useEslint ? ['eslint'] : [];
+gulp.task('script', useEslint, () => {
   return gulp.src(config.dev.script)
     .pipe(plumber(onError))
     .pipe(gulpif(condition, babel({

@@ -72,6 +72,12 @@ git clone https://github.com/vincentSea/gulp-cli.git
 ]
 ```
 
+## 使用Eslint 
+config/index.js文件
+```
+useEslint: false // 是否启用eslint
+```
+
 ## 使用webpack
 * 集成webpack功能，可以自行选择
 
